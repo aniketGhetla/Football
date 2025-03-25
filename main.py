@@ -12,7 +12,7 @@ from formation_cnn_utils import generate_team_heatmap, load_formation_model, pre
 
 def main():
     # 1. Read Video Frames
-    video_frames = read_video('input_videos/ars6.mp4',  resize_to=(1920, 1080))
+    video_frames = read_video('input_videos/ars2.mp4',  resize_to=(1920, 1080))
 
     # 2. Initialize Tracker and Get Tracks
     tracker = Tracker('models/best.pt')
