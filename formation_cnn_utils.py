@@ -6,7 +6,7 @@ from PIL import Image
 from torchvision.models import resnet18
 import torch.nn as nn
 
-# --- Heatmap generation ---
+# Heatmap generation 
 def generate_team_heatmap(player_positions, field_size=(100, 100)):
     heatmap = np.zeros(field_size, dtype=np.float32)
     for x, y in player_positions:
@@ -16,22 +16,26 @@ def generate_team_heatmap(player_positions, field_size=(100, 100)):
     heatmap = (heatmap / heatmap.max()) * 255
     return heatmap.astype(np.uint8)
 
-# --- CNN Model Loader ---
-def load_formation_model(model_path='models/best_formation_model.pth', num_classes=8):
+#  CNN Model Loader
+def load_formation_model(model_path='models/best_formation_model.pth', num_classes=9):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model = resnet18(pretrained=False)
-    model.fc = nn.Linear(model.fc.in_features, num_classes)
+    model.fc = nn.Sequential(
+        nn.Dropout(0.5),
+        nn.Linear(model.fc.in_features, num_classes)
+    )
     model.load_state_dict(torch.load(model_path, map_location=device))
     model.to(device)
     model.eval()
     return model
 
-# --- Predict Formation ---
+
+# Predict Formation 
 def predict_formation_from_heatmap(model, heatmap):
     transform = transforms.Compose([
         transforms.ToTensor(),
         transforms.Resize((224, 224)),
-        transforms.Normalize([0.485, 0.456, 0.406],   # ✅ updated normalization for RGB
+        transforms.Normalize([0.485, 0.456, 0.406],   
                              [0.229, 0.224, 0.225])
     ])
 

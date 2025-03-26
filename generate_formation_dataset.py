@@ -30,7 +30,7 @@ def process_row(row):
         print(f"[Empty] No player data in tracks for {clip_name}")
         return
 
-    # ✅ Process every frame in the segment
+    # Process every frame in the segment
     for frame_index in range(frame_start, frame_end + 1):
         if frame_index >= total_frames:
             print(f"[Out of Range] {clip_name} has only {total_frames} frames. Requested: {frame_index}. Skipping...")
@@ -53,7 +53,7 @@ def process_row(row):
         heatmap = generate_team_heatmap(positions)
 
         # Save the heatmap image under dataset/<formation>/
-        output_folder = os.path.join('dataset', formation)
+        output_folder = os.path.join('dataset2', formation)
         ensure_dir(output_folder)
         output_filename = os.path.join(
             output_folder, 

@@ -8,7 +8,7 @@ from sklearn.metrics import classification_report
 import matplotlib.pyplot as plt
 
 # Paths and Device
-data_dir = "dataset"
+data_dir = "dataset2"
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 # Transforms
