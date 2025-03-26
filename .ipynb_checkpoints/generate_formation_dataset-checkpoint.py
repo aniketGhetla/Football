@@ -9,7 +9,7 @@ def ensure_dir(path):
         os.makedirs(path)
 
 def process_row(row):
-    clip_name = row['ï»¿clip_name'].strip()
+    clip_name = row['\ufeffclip_name'].strip()
     frame_start = int(row['frame_start'])
     frame_end = int(row['frame_end'])
     team_id = int(row['team_id'])

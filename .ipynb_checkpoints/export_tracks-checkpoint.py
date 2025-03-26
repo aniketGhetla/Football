@@ -68,7 +68,7 @@ def export_tracks(clip_path, output_tracks_path):
 
 if __name__ == '__main__':
     # List of your video clip filenames (make sure these exist in your input_videos folder)
-    clips = ['clip1.mp4', 'demo2.mp4', 'ars1.mp4', 'ars2.mp4', 'ars3.mp4', 'clip22.mp4','ars4.mp4']
+    clips = ['clip1.mp4', 'ars1.mp4', 'ars4.mp4','ars6.mp4','dfb2.mp4','dfb5.mp4','dfb8.mp4','dfb12.mp4','dfb11.mp4']
     input_folder = 'input_videos'
     output_folder = 'tracks'
     os.makedirs(output_folder, exist_ok=True)
