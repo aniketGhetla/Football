@@ -14,7 +14,7 @@ from formation_smoothing import smooth_formations_per_team
 
 def main():
     # 1. Read Video Frames
-    video_frames = read_video('input_videos/ars1.mp4',  resize_to=(1920, 1080))
+    video_frames = read_video('input_videos/clip4.mp4',  resize_to=(1920, 1080))
 
     # 2. Initialize Tracker and Get Tracks
     tracker = Tracker('models/best.pt')
@@ -102,7 +102,7 @@ def main():
 
         team_formations_per_frame.append(frame_formations)
 
-    frames_per_minute = 24 * 60  
+    frames_per_minute = 24 * 60 * 2 
     team_formations_per_frame = smooth_formations_per_team(team_formations_per_frame, min_persist=frames_per_minute)
 
     # Store it in tracks
@@ -112,7 +112,7 @@ def main():
     output_video_frames = tracker.draw_annotations(video_frames, tracks, team_ball_control)
  
      # 11. Draw Camera Movement
-    output_video_frames = camera_movement_estimator.draw_camera_movement(output_video_frames, camera_movement_per_frame)
+    #output_video_frames = camera_movement_estimator.draw_camera_movement(output_video_frames, camera_movement_per_frame)
 
     # 12. Draw Speed and Distance
     speed_and_distance_estimator.draw_speed_and_distance(output_video_frames, tracks)

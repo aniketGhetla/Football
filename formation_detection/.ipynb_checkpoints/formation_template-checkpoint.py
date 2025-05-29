@@ -1,0 +1,104 @@
+# formation_templates.py
+# These formation templates are defined in the coordinate system provided by your ViewTransformer:
+#   x in [0, 23.32] (along the field length in your camera view)
+#   y in [0, 68] (across the field width)
+#
+# Each formation is a list of 10 (x, y) tuples corresponding to the positions of outfield players.
+# The positions are rough estimates and may be adjusted based on your calibration and desired tactical display.
+
+formations = {
+    "4-3-3": [
+        # 4 Defenders
+        (3, 12), (3, 28), (3, 44), (3, 60),
+        # 3 Midfielders
+        (12, 20), (12, 34), (12, 48),
+        # 3 Forwards
+        (21, 18), (21, 34), (21, 50)
+    ],
+    "4-4-2": [
+        # 4 Defenders
+        (3, 12), (3, 28), (3, 44), (3, 60),
+        # 4 Midfielders
+        (12, 10), (12, 26), (12, 42), (12, 58),
+        # 2 Forwards
+        (21, 34), (21, 48)
+    ],
+    "3-4-3": [
+        # 3 Defenders
+        (3, 20), (3, 34), (3, 48),
+        # 4 Midfielders
+        (12, 12), (12, 28), (12, 44), (12, 60),
+        # 3 Forwards
+        (21, 18), (21, 34), (21, 50)
+    ],
+    "3-5-2": [
+        # 3 Defenders
+        (3, 20), (3, 34), (3, 48),
+        # 5 Midfielders
+        (12, 10), (12, 22), (12, 34), (12, 46), (12, 58),
+        # 2 Forwards
+        (21, 28), (21, 40)
+    ],
+    "3-3-4": [
+        # 3 Defenders
+        (3, 20), (3, 34), (3, 48),
+        # 3 Midfielders
+        (12, 20), (12, 34), (12, 48),
+        # 4 Forwards
+        (21, 10), (21, 24), (21, 38), (21, 52)
+    ],
+    "2-4-2": [
+        # 2 Defenders
+        (3, 15), (3, 60),
+        # 4 Midfielders
+        (12, 10), (12, 28), (12, 44), (12, 60),
+        # 4 Forwards
+        (21, 10), (21, 22), (21, 34), (21, 48)
+    ],
+    "4-2-3-1": [
+        # 4 Defenders
+        (3, 12), (3, 28), (3, 44), (3, 60),
+        # 2 Defensive Midfielders
+        (10, 30), (10, 50),
+        # 3 Attacking Midfielders
+        (15, 20), (15, 34), (15, 48),
+        # 1 Forward
+        (21, 34)
+    ],
+    "4-1-4-1": [
+        # 4 Defenders
+        (3, 12), (3, 28), (3, 44), (3, 60),
+        # 1 Defensive Midfielder
+        (10, 34),
+        # 4 Midfielders
+        (12, 10), (12, 26), (12, 42), (12, 58),
+        # 1 Forward
+        (21, 34)
+    ],
+    "5-3-2": [
+        # 5 Defenders (evenly distributed)
+        (3, 12), (3, 28), (3, 44), (3, 60), (3, 68),
+        # 3 Midfielders
+        (12, 24), (12, 34), (12, 44),
+        # 2 Forwards
+        (21, 30), (21, 50)
+    ],
+    "3-4-2-1": [
+        # Back 3: 3 Defenders
+        (3, 20), (3, 34), (3, 48),
+        # 4 Midfielders
+        (12, 12), (12, 28), (12, 44), (12, 60),
+        # 2 Attacking Midfielders
+        (18, 26), (18, 42),
+        # 1 Forward
+        (21, 34)
+    ],
+    "2-5-3": [
+        # Back 2: 2 Defenders
+        (3, 24), (3, 44),
+        # 5 Midfielders
+        (10, 8), (10, 24), (10, 40), (10, 56), (10, 68),
+        # 3 Forwards
+        (21, 22), (21, 38), (21, 54)
+    ]
+}
