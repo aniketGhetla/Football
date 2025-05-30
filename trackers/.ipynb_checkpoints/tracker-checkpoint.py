@@ -126,7 +126,7 @@ class Tracker:
             lineType=cv2.LINE_4
         )
 
-        rectangle_width = 40
+        '''rectangle_width = 40
         rectangle_height = 20
         x1_rect = x_center - rectangle_width // 2
         x2_rect = x_center + rectangle_width // 2
@@ -150,7 +150,7 @@ class Tracker:
                 0.6,
                 (0, 0, 0),
                 2
-            )
+            )'''
 
         return frame
 

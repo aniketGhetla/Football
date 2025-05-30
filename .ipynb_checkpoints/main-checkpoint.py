@@ -8,13 +8,12 @@ from player_ball_assigner import PlayerBallAssigner
 from camera_movement_estimator import CameraMovementEstimator
 from view_transformer import ViewTransformer
 from speed_and_distance_estimator import SpeedAndDistance_Estimator
-#from formation_detection import FormationDetector, add_formation_with_goalkeeper, smooth_team_formations
 from formation_cnn_utils import generate_team_heatmap, load_formation_model, predict_formation_from_heatmap
-from formation_smoothing import smooth_formations_per_team
+from formation_smoothing import stabilize_formations
 
 def main():
     # 1. Read Video Frames
-    video_frames = read_video('input_videos/clip1.mp4',  resize_to=(1920, 1080))
+    video_frames = read_video('input_videos/clip4.mp4', resize_to=(1920, 1080))
 
     # 2. Initialize Tracker and Get Tracks
     tracker = Tracker('models/best.pt')
@@ -23,8 +22,7 @@ def main():
 
     # 3. Camera Movement Estimator
     camera_movement_estimator = CameraMovementEstimator(video_frames[0])
-    camera_movement_per_frame = camera_movement_estimator.get_camera_movement(
-        video_frames, read_from_stub=False)
+    camera_movement_per_frame = camera_movement_estimator.get_camera_movement(video_frames, read_from_stub=False)
     camera_movement_estimator.add_adjust_positions_to_tracks(tracks, camera_movement_per_frame)
 
     # 4. View Transformer (adds transformed_position to tracks)
@@ -38,7 +36,7 @@ def main():
     speed_and_distance_estimator = SpeedAndDistance_Estimator()
     speed_and_distance_estimator.add_speed_and_distance_to_tracks(tracks)
 
-    # 7. Assign Player Teams (make sure goalkeepers get a team too if needed)
+    # 7. Assign Player Teams
     team_assigner = TeamAssigner()
     team_assigner.assign_team_color(video_frames[0], tracks['players'][0])
     num_frames = min(len(video_frames), len(tracks['players']))
@@ -48,7 +46,6 @@ def main():
             team = team_assigner.get_player_team(video_frames[frame_num], track['bbox'], player_id)
             tracks['players'][frame_num][player_id]['team'] = team 
             tracks['players'][frame_num][player_id]['team_color'] = team_assigner.team_colors[team]
-        # (Ensure that goalkeepers are assigned a team elsewhere or update here if needed.)
 
     # 8. Assign Ball Acquisition
     player_assigner = PlayerBallAssigner()
@@ -64,24 +61,19 @@ def main():
             team_ball_control.append(team_ball_control[-1] if team_ball_control else 0)
     team_ball_control = np.array(team_ball_control)
 
-    
-
     # 9. CNN-based Formation Detection
-    formation_model = load_formation_model('models/best_formation_model.pth') 
-    formation_labels = {0: "3-4-3",
-    1: "3-5-1",
-    2: "3-5-2",
-    3: "4-2-3-1",
-    4: "4-2-4",
-    5: "4-3-3",
-    6: "4-4-2",
-    7: "4-5-1",
-    8: "5-3-2"}
-    
+    formation_model = load_formation_model('models/best_formation_model.pth')
+    formation_labels = {
+        0: "3-4-3", 1: "3-5-1", 2: "3-5-2",
+        3: "4-2-3-1", 4: "4-2-4", 5: "4-3-3",
+        6: "4-4-2", 7: "4-5-1", 8: "5-3-2"
+    }
+
     team_formations_per_frame = []
+    last_known_formations = {1: "Unknown", 2: "Unknown"}
+
     for frame_num in range(num_frames):
         team_positions = {1: [], 2: []}
-
         for player_id, player_data in tracks['players'][frame_num].items():
             team_id = player_data.get('team')
             pos = player_data.get('position_transformed')
@@ -90,45 +82,44 @@ def main():
 
         frame_formations = {}
         for team_id, positions in team_positions.items():
-            if len(positions) >= 7:
-                print(f"Frame {frame_num} → Team {team_id} → Positions: {len(positions)}")
-
+            if len(positions) >= 1:
                 heatmap = generate_team_heatmap(positions)
                 formation_idx = predict_formation_from_heatmap(formation_model, heatmap)
-                formation_label = formation_labels.get(formation_idx, "Unknown")
+                formation_label = formation_labels.get(formation_idx, last_known_formations.get(team_id, "Unknown"))
                 frame_formations[team_id] = formation_label
+                last_known_formations[team_id] = formation_label
             else:
-                frame_formations[team_id] = "Unknown"
-
+                frame_formations[team_id] = last_known_formations.get(team_id, "Unknown")
         team_formations_per_frame.append(frame_formations)
 
-    frames_per_minute = 24 * 60 * 2 
-    team_formations_per_frame = smooth_formations_per_team(team_formations_per_frame, min_persist=frames_per_minute)
-
-    # Store it in tracks
+    # Stabilize formations
+    fps = 24
+    frames_per_two_minutes = fps * 60 * 2
+    team_formations_per_frame = stabilize_formations(team_formations_per_frame, min_persist=frames_per_two_minutes)
     tracks['team_formations'] = team_formations_per_frame
 
     # 10. Draw Output (annotations)
     output_video_frames = tracker.draw_annotations(video_frames, tracks, team_ball_control)
- 
-     # 11. Draw Camera Movement
-    #output_video_frames = camera_movement_estimator.draw_camera_movement(output_video_frames, camera_movement_per_frame)
+
+    # 11. Draw Camera Movement
+    output_video_frames = camera_movement_estimator.draw_camera_movement(output_video_frames, camera_movement_per_frame)
 
     # 12. Draw Speed and Distance
-    speed_and_distance_estimator.draw_speed_and_distance(output_video_frames, tracks)
-    
-    # Draw Formation Labels in Bottom-Left Corner in Bold Black:
-    for i in range(len(output_video_frames)):
-        frame = output_video_frames[i].copy()
-    
-        # Get formation info
-        formation_dict = tracks.get('team_formations', [{}])[i]
-    
-        # Initialize fallback names
+    output_video_frames = speed_and_distance_estimator.draw_speed_and_distance(output_video_frames, tracks['players'])
+
+    # Forward fill formations
+    team_formations = tracks.get('team_formations', [{}])
+    if len(team_formations) < len(output_video_frames):
+        last_known = team_formations[-1] if team_formations else {1: "Unknown", 2: "Unknown"}
+        team_formations.extend([last_known] * (len(output_video_frames) - len(team_formations)))
+
+    # 13. Draw Formation Labels
+    for i, frame in enumerate(output_video_frames):
+        frame = frame.copy()
+        formation_dict = team_formations[i]
         team_colors = {1: "Team 1", 2: "Team 2"}
         seen_teams = set()
-    
-        # Safely extract one color per team
+
         for player in tracks['players'][i].values():
             team = player.get('team')
             color = player.get('team_color')
@@ -139,27 +130,21 @@ def main():
                     seen_teams.add(team)
             if len(seen_teams) == 2:
                 break
-    
-        # Format text with jersey color
+
         formation_text_1 = f"{team_colors[1]} formation: {formation_dict.get(1, 'Unknown')}"
         formation_text_2 = f"{team_colors[2]} formation: {formation_dict.get(2, 'Unknown')}"
-    
-        # Draw background box
+
         overlay = frame.copy()
         cv2.rectangle(overlay, (20, 850), (570, 970), (255, 255, 255), -1)
         alpha = 0.4
         cv2.addWeighted(overlay, alpha, frame, 1 - alpha, 0, frame)
-    
-        # Draw text
-        cv2.putText(frame, formation_text_1, (50, 900),
-                    cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 0), 3)
-        cv2.putText(frame, formation_text_2, (50, 950),
-                    cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 0), 3)
 
-        # Finalize frame
+        cv2.putText(frame, formation_text_1, (50, 900), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 0), 3)
+        cv2.putText(frame, formation_text_2, (50, 950), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 0), 3)
+
         output_video_frames[i] = frame
 
-    # 13. Save Video
+    # 14. Save Video
     save_video(output_video_frames, 'output_videos/output_video.avi')
 
 if __name__ == '__main__':
