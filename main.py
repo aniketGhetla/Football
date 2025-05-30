@@ -14,7 +14,7 @@ from formation_smoothing import smooth_formations_per_team
 
 def main():
     # 1. Read Video Frames
-    video_frames = read_video('input_videos/clip4.mp4',  resize_to=(1920, 1080))
+    video_frames = read_video('input_videos/clip1.mp4',  resize_to=(1920, 1080))
 
     # 2. Initialize Tracker and Get Tracks
     tracker = Tracker('models/best.pt')
