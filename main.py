@@ -1,4 +1,3 @@
-
 from utils import read_video, save_video
 from trackers import Tracker
 import cv2
@@ -10,10 +9,17 @@ from view_transformer import ViewTransformer
 from speed_and_distance_estimator import SpeedAndDistance_Estimator
 from formation_cnn_utils import generate_team_heatmap, load_formation_model, predict_formation_from_heatmap
 from formation_smoothing import stabilize_formations
+from tactical_mini_map import TacticalMiniMap
+
+
 
 def main():
     # 1. Read Video Frames
     video_frames = read_video('input_videos/clip4.mp4', resize_to=(1920, 1080))
+
+    # Initialize Mini tactical map
+    mini_map_generator = TacticalMiniMap(frame_width=1920, frame_height=1080,x_shift_meters=40)
+
 
     # 2. Initialize Tracker and Get Tracks
     tracker = Tracker('models/best.pt')
@@ -25,7 +31,7 @@ def main():
     camera_movement_per_frame = camera_movement_estimator.get_camera_movement(video_frames, read_from_stub=False)
     camera_movement_estimator.add_adjust_positions_to_tracks(tracks, camera_movement_per_frame)
 
-    # 4. View Transformer (adds transformed_position to tracks)
+    # 4. View Transformer
     view_transformer = ViewTransformer()
     view_transformer.add_transformed_position_to_tracks(tracks)
 
@@ -101,10 +107,7 @@ def main():
     # 10. Draw Output (annotations)
     output_video_frames = tracker.draw_annotations(video_frames, tracks, team_ball_control)
 
-    # 11. Draw Camera Movement
-    #output_video_frames = camera_movement_estimator.draw_camera_movement(output_video_frames, camera_movement_per_frame)
-
-    # 12. Draw Speed and Distance
+    # 11. Draw Speed and Distance
     output_video_frames = speed_and_distance_estimator.draw_speed_and_distance(output_video_frames, tracks['players'])
 
     # Forward fill formations
@@ -113,14 +116,21 @@ def main():
         last_known = team_formations[-1] if team_formations else {1: "Unknown", 2: "Unknown"}
         team_formations.extend([last_known] * (len(output_video_frames) - len(team_formations)))
 
-    # 13. Draw Formation Labels
+    # 12. Frame-by-Frame: Add Tactical Map + Formation Labels
     for i, frame in enumerate(output_video_frames):
         frame = frame.copy()
+
+        # --- Add Mini-map wit
+        player_tracks = tracks['players'][i]
+        ball_track = tracks['ball'][i] if 'ball' in tracks and i < len(tracks['ball']) else {}
+        frame = mini_map_generator.draw_mini_map(frame, player_tracks, ball_track)
+
+        # --- Draw Formation Labels ---
         formation_dict = team_formations[i]
         team_colors = {1: "Team 1", 2: "Team 2"}
         seen_teams = set()
 
-        for player in tracks['players'][i].values():
+        for player in player_tracks.values():
             team = player.get('team')
             color = player.get('team_color')
             if isinstance(team, (int, np.integer)) and isinstance(color, str):
@@ -144,7 +154,7 @@ def main():
 
         output_video_frames[i] = frame
 
-    # 14. Save Video
+    # 13. Save Video
     save_video(output_video_frames, 'output_videos/output_video.avi')
 
 if __name__ == '__main__':
