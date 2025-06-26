@@ -1,4 +1,4 @@
-# ⚽ Football Analytics System
+# ⚽ Football AI Analyzer
 
 This project performs **football formation detection**, **player & ball tracking**, and computes metrics like **speed**, **distance covered**, and **ball possession** using computer vision and deep learning techniques.
 
@@ -7,12 +7,10 @@ This project performs **football formation detection**, **player & ball tracking
 Using match footage as input, this system extracts tactical insights including:
 - Player & ball tracking
 - Team formation classification
-- Camera motion compensation
 - Spatial metric analysis (speed, distance)
 - Ball possession estimation
 
-It’s built with **YOLOv11**, **OpenCV**, **Ultralytics**, **K-Means**, and **ResNet-18**.
-
+It’s built with **YOLOv11**, **OpenCV**, **Ultralytics**, **K-Means**, and **CNN**.
 
 ## 🌟 Features
 
