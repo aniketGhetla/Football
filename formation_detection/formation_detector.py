@@ -10,10 +10,9 @@ class FormationDetector:
         self.formations = formations  # Dictionary of formation templates
 
     def detect_formation_for_team(self, player_positions):
-        """
-        Given a list of 10 (x, y) positions (outfield players), find the best-fit formation.
-        Returns: (best_formation_name, minimal_cost)
-        """
+        
+        #find the best-fit formation.
+                
         if len(player_positions) < 10:
             return ("Unknown", float("inf"))
         
@@ -37,17 +36,8 @@ class FormationDetector:
         
         return best_formation, min_cost
 
-# --- Module-Level Functions ---
-
 def add_formation_with_goalkeeper(formation_detector, tracks):
-    """
-    For each frame, for each team, separate goalkeeper from outfield players.
-    Expect exactly 1 goalkeeper and 10 outfield players.
-    If there are more than 10 outfield players, sort them by x-coordinate and select the middle 10.
-    If conditions are met, detect the formation for outfield players and prepend "1-" (goalkeeper).
-    Otherwise, assign formation as "Unknown".
-    Updates tracks['team_formations'] and each player's 'formation' field.
-    """
+   
     TARGET_OUTFIELD = 10  # number of outfield players
     num_frames = len(tracks['players'])
     if 'team_formations' not in tracks:
@@ -104,7 +94,7 @@ def add_formation_with_goalkeeper(formation_detector, tracks):
 
             # Store formation for the team in this frame.
             tracks['team_formations'][frame_num][team_id] = formation_str
-            # Also update each player's formation field in both players and goalkeepers.
+            #  update each player's formation field in both players and goalkeepers.
             for player_id, data in tracks['players'][frame_num].items():
                 if data.get('team') == team_id:
                     data['formation'] = formation_str
@@ -114,10 +104,7 @@ def add_formation_with_goalkeeper(formation_detector, tracks):
     return tracks
 
 def smooth_team_formations(tracks):
-    """
-    For each team, compute the majority formation from frames where a valid formation was detected.
-    Then, for each frame where the formation is "Unknown" for that team, replace it with the majority.
-    """
+    
     num_frames = len(tracks['team_formations'])
     # First, gather all valid formations per team
     team_formations_all = {}
@@ -136,7 +123,7 @@ def smooth_team_formations(tracks):
         else:
             team_majority[team_id] = "Unknown"
     
-    # Now update each frame: if a team's formation is "Unknown", replace it with the majority
+    # update each frame: if a team's formation is "Unknown", replace it with the majority
     for frame_num in range(num_frames):
         formation_dict = tracks['team_formations'][frame_num]
         for team_id in formation_dict:
