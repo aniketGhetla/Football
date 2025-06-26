@@ -24,7 +24,7 @@ It’s built with **YOLOv11**, **OpenCV**, **Ultralytics**, **K-Means**, and **C
 
 ## Output Image
 
-Here’s a snapshot from the tracking and formation detection system:
+Here’s a snapshot of the ouput video
 
 ![Output Image](output_image)
 
