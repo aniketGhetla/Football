@@ -22,6 +22,11 @@ It’s built with **YOLOv11**, **OpenCV**, **Ultralytics**, **K-Means**, and **C
 - **Perspective transformation for spatial analysis**
 - **Team segmentation using K-means**
 
+## Output Image
+
+Here’s a snapshot from the tracking and formation detection system:
+
+![Output Image](/output_image.png)
 
 ##  How to Run
 
@@ -30,3 +35,4 @@ git clone https://github.com/aniketGhetla/Football.git
 
 # Run the main script
 python main.py --input path/to/video.mp4
+
