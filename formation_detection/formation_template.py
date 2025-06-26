@@ -1,10 +1,3 @@
-# formation_templates.py
-# These formation templates are defined in the coordinate system provided by your ViewTransformer:
-#   x in [0, 23.32] (along the field length in your camera view)
-#   y in [0, 68] (across the field width)
-#
-# Each formation is a list of 10 (x, y) tuples corresponding to the positions of outfield players.
-# The positions are rough estimates and may be adjusted based on your calibration and desired tactical display.
 
 formations = {
     "4-3-3": [
@@ -76,7 +69,7 @@ formations = {
         (21, 34)
     ],
     "5-3-2": [
-        # 5 Defenders (evenly distributed)
+        # 5 Defenders 
         (3, 12), (3, 28), (3, 44), (3, 60), (3, 68),
         # 3 Midfielders
         (12, 24), (12, 34), (12, 44),
