@@ -14,35 +14,33 @@ from tactical_mini_map import TacticalMiniMap
 
 
 def main():
-    # 1. Read Video Frames
+    # Read Video Frames
     video_frames = read_video('input_videos/clip4.mp4', resize_to=(1920, 1080))
 
-    # Initialize Mini tactical map
     mini_map_generator = TacticalMiniMap(frame_width=1920, frame_height=1080,x_shift_meters=40)
 
-
-    # 2. Initialize Tracker and Get Tracks
+    # Initialize Tracker and Get Tracks
     tracker = Tracker('models/best.pt')
     tracks = tracker.get_object_tracks(video_frames, read_from_stub=False)
     tracker.add_position_to_tracks(tracks)
 
-    # 3. Camera Movement Estimator
+    # Camera Movement Estimator
     camera_movement_estimator = CameraMovementEstimator(video_frames[0])
     camera_movement_per_frame = camera_movement_estimator.get_camera_movement(video_frames, read_from_stub=False)
     camera_movement_estimator.add_adjust_positions_to_tracks(tracks, camera_movement_per_frame)
 
-    # 4. View Transformer
+    # View Transformer
     view_transformer = ViewTransformer()
     view_transformer.add_transformed_position_to_tracks(tracks)
 
-    # 5. Interpolate Ball Positions
+    # Interpolate Ball Positions
     tracks["ball"] = tracker.interpolate_ball_positions(tracks["ball"])
 
-    # 6. Speed and Distance Estimator
+    # Speed and Distance Estimator
     speed_and_distance_estimator = SpeedAndDistance_Estimator()
     speed_and_distance_estimator.add_speed_and_distance_to_tracks(tracks)
 
-    # 7. Assign Player Teams
+    # Assign Player Teams
     team_assigner = TeamAssigner()
     team_assigner.assign_team_color(video_frames[0], tracks['players'][0])
     num_frames = min(len(video_frames), len(tracks['players']))
@@ -53,7 +51,7 @@ def main():
             tracks['players'][frame_num][player_id]['team'] = team 
             tracks['players'][frame_num][player_id]['team_color'] = team_assigner.team_colors[team]
 
-    # 8. Assign Ball Acquisition
+    # Assign Ball Acquisition
     player_assigner = PlayerBallAssigner()
     team_ball_control = []
     for frame_num in range(num_frames):
@@ -67,7 +65,7 @@ def main():
             team_ball_control.append(team_ball_control[-1] if team_ball_control else 0)
     team_ball_control = np.array(team_ball_control)
 
-    # 9. CNN-based Formation Detection
+    # CNN-based Formation Detection
     formation_model = load_formation_model('models/best_formation_model.pth')
     formation_labels = {
         0: "3-4-3", 1: "3-5-1", 2: "3-5-2",
@@ -104,10 +102,10 @@ def main():
     team_formations_per_frame = stabilize_formations(team_formations_per_frame, min_persist=frames_per_two_minutes)
     tracks['team_formations'] = team_formations_per_frame
 
-    # 10. Draw Output (annotations)
+    
     output_video_frames = tracker.draw_annotations(video_frames, tracks, team_ball_control)
 
-    # 11. Draw Speed and Distance
+    # Draw Speed and Distance
     output_video_frames = speed_and_distance_estimator.draw_speed_and_distance(output_video_frames, tracks['players'])
 
     # Forward fill formations
@@ -116,16 +114,16 @@ def main():
         last_known = team_formations[-1] if team_formations else {1: "Unknown", 2: "Unknown"}
         team_formations.extend([last_known] * (len(output_video_frames) - len(team_formations)))
 
-    # 12. Frame-by-Frame: Add Tactical Map + Formation Labels
+    # Frame-by-Frame: Add Tactical Map + Formation Labels
     for i, frame in enumerate(output_video_frames):
         frame = frame.copy()
 
-        # --- Add Mini-map wit
+        # Add Mini-map 
         player_tracks = tracks['players'][i]
         ball_track = tracks['ball'][i] if 'ball' in tracks and i < len(tracks['ball']) else {}
         frame = mini_map_generator.draw_mini_map(frame, player_tracks, ball_track)
 
-        # --- Draw Formation Labels ---
+        # Draw Formation Labels
         formation_dict = team_formations[i]
         team_colors = {1: "Team 1", 2: "Team 2"}
         seen_teams = set()
@@ -154,7 +152,7 @@ def main():
 
         output_video_frames[i] = frame
 
-    # 13. Save Video
+    # Save Video
     save_video(output_video_frames, 'output_videos/output_video.avi')
 
 if __name__ == '__main__':
